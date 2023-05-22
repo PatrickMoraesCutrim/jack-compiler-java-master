@@ -77,7 +77,6 @@ public class Parser {
         return new ParseError();
     }
 
-    //isNew
     void parseTerm() {
         printNonTerminal("term");
         switch (peekToken.type) {
@@ -105,47 +104,35 @@ public class Parser {
         printNonTerminal("/term");
       }
 
-
-    // isNotNew  
-    void expr () {
-        number();
-        oper();
+    static public boolean isOperator(String op) {
+        return "+-*/<>=~&|".contains(op);
     }
 
-    void number () {
-        System.out.println(currentToken.lexeme);
-        match(TokenType.NUMBER);
-    }
-
-
-   private void match(TokenType t) {
-        if (currentToken.type == t) {
-            nextToken();
-        }else {
-            throw new Error("syntax error");
+    void parseExpression() {
+        printNonTerminal("expression");
+        parseTerm ();
+        while (isOperator(peekToken.lexeme)) {
+            expectPeek(peekToken.type);
+            parseTerm();
         }
-   }
-
-    void oper () {
-        if (currentToken.type == TokenType.PLUS) {
-            match(TokenType.PLUS);
-            number();
-            System.out.println("add");
-            oper();
-        } else if (currentToken.type == TokenType.MINUS) {
-            match(TokenType.MINUS);
-            number();
-            System.out.println("sub");
-            oper();
-        } else if (currentToken.type == TokenType.EOF) {
-            // vazio
-        } else {
-            throw new Error("syntax error");
-        }
+        printNonTerminal("/expression");
     }
 
-    public String VMOutput() {
-        return "";
+    void parseLet() {
+        printNonTerminal("letStatement");
+        expectPeek(TokenType.LET);
+        expectPeek(TokenType.IDENT);
+
+        if (peekTokenIs(TokenType.LBRACKET)) {
+            expectPeek(TokenType.LBRACKET);
+            parseExpression();
+            expectPeek(TokenType.RBRACKET);
+        }
+
+        expectPeek(TokenType.EQ);
+        parseExpression();
+        expectPeek(TokenType.SEMICOLON);
+        printNonTerminal("/letStatement");
     }
 
 }
