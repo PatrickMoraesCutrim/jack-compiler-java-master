@@ -6,7 +6,7 @@ import br.ufma.ecp.SymbolTable.Kind;
 import br.ufma.ecp.SymbolTable.Symbol;
 import br.ufma.ecp.VmWriter.Command;
 import br.ufma.ecp.VmWriter.Segment;
-import br.ufma.ecp.token.*;
+
 
 
 
@@ -55,7 +55,7 @@ public class Parser {
         }
 
         while (peekTokenIs(TokenType.FUNCTION) || peekTokenIs(TokenType.CONSTRUCTOR) || peekTokenIs(TokenType.METHOD)) {
-            //parseSubroutineDec();
+            parseSubroutineDec();
         }      
         
         expectPeek(TokenType.RBRACE);
@@ -63,6 +63,46 @@ public class Parser {
 
         
     }
+
+    void parseLet() {
+
+    printNonTerminal("letStatement");
+    var isArray = false;
+
+    expectPeek(TokenType.LET);
+    expectPeek(TokenType.IDENT);
+    // **
+    var symbol = symbolTable.resolve(currentToken.lexeme);
+    // **
+    // array
+    if (peekTokenIs(TokenType.LBRACKET)) {
+        expectPeek(TokenType.LBRACKET);
+        parseExpression();
+
+        vmWriter.writePush(kindSegment2(symbol.kind()), symbol.index());
+        vmWriter.writeArithmetic(Command.ADD);
+        expectPeek(TokenType.RBRACKET);
+
+        isArray = true;
+    }
+
+    expectPeek(TokenType.EQ);
+    parseExpression();
+
+    if (isArray) {
+
+        vmWriter.writePop(Segment.TEMP, 0); 
+        vmWriter.writePop(Segment.POINTER, 1);
+        vmWriter.writePush(Segment.TEMP, 0); 
+        vmWriter.writePop(Segment.THAT, 0); 
+
+    } else {
+        vmWriter.writePop(kindSegment2(symbol.kind()), symbol.index());
+    }
+
+    expectPeek(TokenType.SEMICOLON);
+    printNonTerminal("/letStatement");
+}
     
     
     // 'var' type varName ( ',' varName)* ';'
@@ -333,6 +373,8 @@ public class Parser {
         printNonTerminal("/returnStatement");
     }
 
+    
+
     void parseSubroutineCall() {
         // **
         var numArg = 0;
@@ -406,11 +448,11 @@ public class Parser {
     private boolean isOperator(TokenType type) {
         return type.ordinal() >= PLUS.ordinal() && type.ordinal() <= EQ.ordinal();
     }
-    
+
 
     void compileOperators(TokenType type) {
         System.out.println(type);
-        if (type == TokenType.AST) {
+        if (type == TokenType.ASTERISK) {
             vmWriter.writeCall("Math.multiply", 2);
         } else if (type == TokenType.SLASH) {
             vmWriter.writeCall("Math.divide", 2);
@@ -545,27 +587,6 @@ public class Parser {
         }
         printNonTerminal("/expression");
     }
-
-    /**
-     * 
-     */
-    void parseLet() {
-        printNonTerminal("letStatement");
-        expectPeek(TokenType.LET);
-        expectPeek(TokenType.IDENT);
-
-        if (peekTokenIs(TokenType.LBRACKET)) {
-            expectPeek(TokenType.LBRACKET);
-            parseExpression();
-            expectPeek(TokenType.RBRACKET);
-        }
-
-        expectPeek(TokenType.EQ);
-        parseExpression();
-        expectPeek(TokenType.SEMICOLON);
-        printNonTerminal("/letStatement");
-
-    }
 
 
 
