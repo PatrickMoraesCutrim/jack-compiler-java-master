@@ -312,7 +312,7 @@ public class Parser {
         printNonTerminal("doStatement");
         expectPeek(TokenType.DO);
         expectPeek(TokenType.IDENT);
-        // parseSubroutineCall(); imprementar depois
+        parseSubroutineCall(); 
         expectPeek(TokenType.SEMICOLON);
         vmWriter.writePop(Segment.TEMP, 0);
         printNonTerminal("/doStatement");
@@ -332,6 +332,116 @@ public class Parser {
         vmWriter.writeReturn();
         printNonTerminal("/returnStatement");
     }
+
+    void parseSubroutineCall() {
+        // **
+        var numArg = 0;
+        var ident = currentToken.lexeme;
+        var simbol = symbolTable.resolve(ident); // CLASS OR OBJECT
+        var functName = ident + ".";
+        // **
+        // método da propria classe
+        if (peekTokenIs(TokenType.LPAREN)) {
+            expectPeek(TokenType.LPAREN);
+            vmWriter.writePush(Segment.POINTER, 0);
+            numArg = parseExpressionList() + 1;
+            expectPeek(TokenType.RPAREN);
+            functName = className + "." + ident;
+        } else {
+            // pode ser um metodo de um outro objeto ou uma função
+            expectPeek(TokenType.DOT);
+            expectPeek(TokenType.IDENT); // nome da função
+            if (simbol != null) {
+                // é o metodo
+                functName = simbol.type() + "." + currentToken.lexeme;
+                vmWriter.writePush(kindSegment2(simbol.kind()), simbol.index());
+                numArg = 1;
+
+            } else {
+                functName += currentToken.lexeme; // se for uma função
+            }
+            expectPeek(TokenType.LPAREN);
+            numArg += parseExpressionList();
+
+            expectPeek(TokenType.RPAREN);
+        }
+        vmWriter.writeCall(functName, numArg);
+
+    }
+
+    private Segment kindSegment2(Kind kind) {
+        if (kind == Kind.STATIC)
+            return Segment.STATIC;
+        if (kind == Kind.FIELD)
+            return Segment.THIS;
+        if (kind == Kind.VAR)
+            return Segment.LOCAL;
+        if (kind == Kind.ARG)
+            return Segment.ARG;
+        return null;
+
+    }
+
+    int parseExpressionList() {
+        printNonTerminal("expressionList");
+        var numArg = 0;
+
+        if (!peekTokenIs(TokenType.RPAREN)) // verifica se tem pelo menos uma expressao
+        {
+            parseExpression();
+            numArg = 1;
+        }
+
+        // procurando as outras
+        while (peekTokenIs(TokenType.COMMA)) {
+            expectPeek(TokenType.COMMA);
+            parseExpression();
+            numArg++;
+        }
+
+        printNonTerminal("/expressionList");
+        return numArg;
+    }
+
+    private boolean isOperator(TokenType type) {
+        return type.ordinal() >= PLUS.ordinal() && type.ordinal() <= EQ.ordinal();
+    }
+    
+
+    void compileOperators(TokenType type) {
+        System.out.println(type);
+        if (type == TokenType.AST) {
+            vmWriter.writeCall("Math.multiply", 2);
+        } else if (type == TokenType.SLASH) {
+            vmWriter.writeCall("Math.divide", 2);
+        } else if (type == TokenType.PLUS) {
+            vmWriter.writeArithmetic(Command.ADD);
+        } else {
+            vmWriter.writeArithmetic(typeOperator(type));
+        }
+
+    }
+
+    private Command typeOperator(TokenType type) {
+        if (type == TokenType.PLUS)
+            return Command.ADD;
+        if (type == TokenType.MINUS)
+            return Command.SUB;
+        if (type == TokenType.LT)
+            return Command.LT;
+        if (type == TokenType.GT)
+            return Command.GT;
+        if (type == TokenType.EQ)
+            return Command.EQ;
+        if (type == TokenType.AND)
+            return Command.AND;
+        if (type == TokenType.OR)
+            return Command.OR;
+        return null;
+
+    }
+
+
 
     
 
@@ -436,6 +546,9 @@ public class Parser {
         printNonTerminal("/expression");
     }
 
+    /**
+     * 
+     */
     void parseLet() {
         printNonTerminal("letStatement");
         expectPeek(TokenType.LET);
@@ -451,6 +564,9 @@ public class Parser {
         parseExpression();
         expectPeek(TokenType.SEMICOLON);
         printNonTerminal("/letStatement");
+
     }
+
+
 
 }
