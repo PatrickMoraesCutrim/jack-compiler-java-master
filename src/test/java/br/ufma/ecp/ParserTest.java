@@ -296,47 +296,7 @@ public class ParserTest extends TestSupport {
 
         var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
         parser.parse();
-        var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       }
 
