@@ -308,6 +308,33 @@ public class Parser {
         printNonTerminal("/ifStatement");
     }
 
+    void parseDo() {
+        printNonTerminal("doStatement");
+        expectPeek(TokenType.DO);
+        expectPeek(TokenType.IDENT);
+        // parseSubroutineCall(); imprementar depois
+        expectPeek(TokenType.SEMICOLON);
+        vmWriter.writePop(Segment.TEMP, 0);
+        printNonTerminal("/doStatement");
+    }
+
+    void parseReturn() {
+        printNonTerminal("returnStatement");
+        expectPeek(TokenType.RETURN);
+
+        if (!peekTokenIs(TokenType.SEMICOLON)) {
+            parseExpression();
+        } else {
+            vmWriter.writePush(Segment.CONST, 0);
+        }
+        expectPeek(TokenType.SEMICOLON);
+
+        vmWriter.writeReturn();
+        printNonTerminal("/returnStatement");
+    }
+
+    
+
 
 
     
