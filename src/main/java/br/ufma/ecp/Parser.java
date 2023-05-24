@@ -53,6 +53,40 @@ public class Parser {
        throw error(peekToken, "Expected a statement");
 
     }
+    void parseClass() {
+        printNonTerminal("class");
+        expectPeek(TokenType.CLASS);
+        expectPeek(TokenType.IDENT);
+        // ** insere o nome da classe
+        String className = currentToken.lexeme;
+        // **
+        expectPeek(TokenType.LBRACE);
+
+        while (peekToken.type == TokenType.FIELD || peekToken.type == TokenType.STATIC) {
+            parseClassVarDec();
+        }
+        // parseSubroutineDec();
+        while (peekTokenIs(TokenType.FUNCTION) || peekTokenIs(TokenType.CONSTRUCTOR) || peekTokenIs(TokenType.METHOD)) {
+            parseSubroutineDec();
+        }
+
+        expectPeek(TokenType.RBRACE);
+
+        printNonTerminal("/class");
+    }
+
+    private void parseSubroutineDec() {
+    }
+
+    public void parseClassVarDec(){
+
+        expectPeek(TokenType.FIELD);
+        expectPeek(TokenType.IDENT);
+        expectPeek(TokenType.LBRACE);
+        expectPeek(TokenType.RBRACE);
+
+    }
+    
 
     private void expectPeek (TokenType type) {
         if (peekToken.type == type) {
@@ -107,6 +141,16 @@ public class Parser {
     static public boolean isOperator(String op) {
         return "+-*/<>=~&|".contains(op);
     }
+    void parseDo() {
+        printNonTerminal("doStatement");
+        expectPeek(TokenType.DO);
+        expectPeek(TokenType.IDENT);
+        parseSubroutineCall();
+        expectPeekTokenType.(SEMICOLON);
+        vmWriter.writePop(Segment.TEMP, 0);
+        printNonTerminal("/doStatement");
+    }
+    
 
     void parseExpression() {
         printNonTerminal("expression");
