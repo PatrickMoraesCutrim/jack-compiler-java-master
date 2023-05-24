@@ -68,8 +68,8 @@ public class VmWriter {
         vmOutput.append(String.format("call %s %d\n", name, nArgs));
     }
 
-    public void writeFunction(String name, int nLocals) {
-        vmOutput.append(String.format("function %s %d\n", name, nLocals));
+    public void writeFunction(Object functionName, int nLocals) {
+        vmOutput.append(String.format("function %s %d\n", functionName, nLocals));
     }
 
     public void writeReturn() {

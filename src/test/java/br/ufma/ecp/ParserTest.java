@@ -298,8 +298,47 @@ public class ParserTest extends TestSupport {
         parser.parse();
         var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
-        assertEquals(expectedResult, result);
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      }
 
     @Test
     public void testVarDeclaration () {

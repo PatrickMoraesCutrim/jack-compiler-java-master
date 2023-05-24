@@ -165,6 +165,7 @@ public class Parser {
 
         ifLabelNum = 0;
         whileLabelNum = 0;
+
         symbolTable.startSubroutine();
 
         expectPeek(TokenType.CONSTRUCTOR, TokenType.FUNCTION, TokenType.METHOD);
@@ -177,14 +178,13 @@ public class Parser {
         // 'int' | 'char' | 'boolean' | className
         expectPeek(TokenType.VOID, TokenType.INT, TokenType.CHAR, TokenType.BOOLEAN, TokenType.IDENT);
         expectPeek(TokenType.IDENT);
-        // **
-        var functName = className + "." + currentToken.lexeme;
-        // **
+
+        var functionName = className + "." + currentToken.value();
 
         expectPeek(TokenType.LPAREN);
         parseParameterList();
         expectPeek(TokenType.RPAREN);
-        parseSubroutineBody(functName, subroutineType);
+        parseSubroutineBody(functionName, subroutineType);
 
         printNonTerminal("/subroutineDec");
     }
@@ -218,7 +218,7 @@ public class Parser {
     }
 
     // '{' varDec* statements '}'
-    void parseSubroutineBody(String functName, TokenType subroutineType) {
+    void parseSubroutineBody(Object functionName, TokenType subroutineType) {
 
         printNonTerminal("subroutineBody");
         expectPeek(TokenType.LBRACE);
@@ -226,7 +226,7 @@ public class Parser {
             parseVarDec();
         }
         var numlocals = symbolTable.varCont(Kind.VAR);
-        vmWriter.writeFunction(functName, numlocals);
+        vmWriter.writeFunction(functionName, numlocals);
         if (subroutineType == TokenType.CONSTRUCTOR) {
             vmWriter.writePush(Segment.CONST, symbolTable.varCont(Kind.FIELD));
             vmWriter.writeCall("Memory.alloc", 1);
@@ -445,7 +445,7 @@ public class Parser {
         return numArg;
     }
 
-    private boolean isOperator(TokenType type) {
+    public boolean isOperator(TokenType type) {
         return type.ordinal() >= PLUS.ordinal() && type.ordinal() <= EQ.ordinal();
     }
 
