@@ -3,7 +3,10 @@ package br.ufma.ecp;
 import br.ufma.ecp.token.Token;
 import br.ufma.ecp.token.TokenType;
 import br.ufma.ecp.SymbolTable.Kind;
-import br.ufma.ecp.SymbolTable.Symbol;;
+import br.ufma.ecp.SymbolTable.Symbol;
+import br.ufma.ecp.VmWriter.Command;
+import br.ufma.ecp.VmWriter.Segment;
+import br.ufma.ecp.token.*;
 
 
 
@@ -15,11 +18,16 @@ public class Parser {
     private Token peekToken;
     private StringBuilder xmlOutput = new StringBuilder();
     private SymbolTable symbolTable;
+    private int ifLabelNum;
+    private int whileLabelNum;
+    private VmWriter vmWriter;
 
     private String className; // nome da classe
 
     public Parser (byte[] input) {
         scan = new Scanner(input);
+        symbolTable = new SymbolTable();
+        vmWriter = new VmWriter();
         nextToken();        
     }
 
@@ -55,6 +63,7 @@ public class Parser {
 
         
     }
+    
     
     // 'var' type varName ( ',' varName)* ';'
     void parseVarDec() {
@@ -110,6 +119,196 @@ public class Parser {
         expectPeek(TokenType.SEMICOLON);
         printNonTerminal("/classVarDec");
     }
+
+    void parseSubroutineDec() {
+        printNonTerminal("subroutineDec");
+
+        ifLabelNum = 0;
+        whileLabelNum = 0;
+        symbolTable.startSubroutine();
+
+        expectPeek(TokenType.CONSTRUCTOR, TokenType.FUNCTION, TokenType.METHOD);
+        var subroutineType = currentToken.type;
+
+        if (subroutineType == TokenType.METHOD) {
+            symbolTable.define("this", className, Kind.ARG);
+        }
+
+        // 'int' | 'char' | 'boolean' | className
+        expectPeek(TokenType.VOID, TokenType.INT, TokenType.CHAR, TokenType.BOOLEAN, TokenType.IDENT);
+        expectPeek(TokenType.IDENT);
+        // **
+        var functName = className + "." + currentToken.lexeme;
+        // **
+
+        expectPeek(TokenType.LPAREN);
+        parseParameterList();
+        expectPeek(TokenType.RPAREN);
+        parseSubroutineBody(functName, subroutineType);
+
+        printNonTerminal("/subroutineDec");
+    }
+
+     // ((type varName) ( ',' type varName)*)?
+     void parseParameterList() {
+        printNonTerminal("parameterList");
+        SymbolTable.Kind kind = Kind.ARG;
+
+        if (!peekTokenIs(TokenType.RPAREN)) // verifica se tem pelo menos uma expressao
+        {
+            expectPeek(TokenType.INT, TokenType.CHAR, TokenType.BOOLEAN, TokenType.IDENT);
+            String type = currentToken.lexeme;
+            expectPeek(TokenType.IDENT);
+            String name = currentToken.lexeme;
+            symbolTable.define(name, type, kind);
+
+            while (peekTokenIs(TokenType.COMMA)) {
+                expectPeek(TokenType.COMMA);
+                expectPeek(TokenType.INT, TokenType.CHAR, TokenType.BOOLEAN, TokenType.IDENT);
+                type = currentToken.lexeme;
+
+                expectPeek(TokenType.IDENT);
+                name = currentToken.lexeme;
+
+                symbolTable.define(name, type, kind);
+
+            }
+        }
+        printNonTerminal("/parameterList");
+    }
+
+    // '{' varDec* statements '}'
+    void parseSubroutineBody(String functName, TokenType subroutineType) {
+
+        printNonTerminal("subroutineBody");
+        expectPeek(TokenType.LBRACE);
+        while (peekTokenIs(TokenType.VAR)) {
+            parseVarDec();
+        }
+        var numlocals = symbolTable.varCont(Kind.VAR);
+        vmWriter.writeFunction(functName, numlocals);
+        if (subroutineType == TokenType.CONSTRUCTOR) {
+            vmWriter.writePush(Segment.CONST, symbolTable.varCont(Kind.FIELD));
+            vmWriter.writeCall("Memory.alloc", 1);
+            vmWriter.writePop(Segment.POINTER, 0);
+        }
+
+        if (subroutineType == TokenType.METHOD) {
+            vmWriter.writePush(Segment.ARG, 0);
+            vmWriter.writePop(Segment.POINTER, 0);
+        }
+
+        parseStatements();
+        expectPeek(TokenType.RBRACE);
+        printNonTerminal("/subroutineBody");
+    }
+    void parseStatements() {
+        printNonTerminal("statements");
+        while (peekToken.type == TokenType.WHILE ||
+                peekToken.type == TokenType.IF ||
+                peekToken.type == TokenType.LET ||
+                peekToken.type == TokenType.DO ||
+                peekToken.type == TokenType.RETURN) {
+            parseStatement();
+        }
+
+        printNonTerminal("/statements");
+    }
+
+    // letStatement | ifStatement | whileStatement | doStatement | returnStatement
+    void parseStatement() {
+        switch (peekToken.type) {
+            case LET:
+                parseLet();
+                break;
+            case WHILE:
+                parseWhile();
+                break;
+            case IF:
+                parseIf();
+                break;
+            case RETURN:
+                parseReturn();
+                break;
+            case DO:
+                parseDo();
+                break;
+            default:
+                throw new Error("Expected a statement");
+        }
+    }
+
+    void parseWhile() {
+        printNonTerminal("whileStatement");
+        // **
+        var labelTrue = "WHILE_EXP" + whileLabelNum;
+        var labelFalse = "WHILE_END" + whileLabelNum;
+        whileLabelNum++;
+
+        vmWriter.writeLabel(labelTrue);
+        // **
+
+        expectPeek(TokenType.WHILE);
+        expectPeek(TokenType.LPAREN);
+        parseExpression();
+        // **
+        vmWriter.writeArithmetic(Command.NOT);
+        vmWriter.writeIf(labelFalse);
+
+        expectPeek(TokenType.RPAREN);
+        expectPeek(TokenType.LBRACE);
+        parseStatements();
+        // **
+        vmWriter.writeGoto(labelTrue); // Go back to labelTrue and check condition
+        vmWriter.writeLabel(labelFalse); // Breaks out of while loop because ~(condition) is true
+
+        expectPeek(TokenType.RBRACE);
+        printNonTerminal("/whileStatement");
+    }
+
+    // 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
+    void parseIf() {
+        printNonTerminal("ifStatement");
+
+        var labelTrue = "IF_TRUE" + ifLabelNum;
+        var labelFalse = "IF_FALSE" + ifLabelNum;
+        var labelEnd = "IF_END" + ifLabelNum;
+
+        ifLabelNum++;
+
+        expectPeek(TokenType.IF);
+        expectPeek(TokenType.LPAREN);
+        parseExpression();
+        expectPeek(TokenType.RPAREN);
+        // **
+        vmWriter.writeIf(labelTrue);
+        vmWriter.writeGoto(labelFalse);
+        vmWriter.writeLabel(labelTrue);
+
+        // **
+
+        expectPeek(TokenType.LBRACE);
+        parseStatements();
+        expectPeek(TokenType.RBRACE);
+
+        if (peekTokenIs(TokenType.ELSE)) {
+            vmWriter.writeGoto(labelEnd);
+        }
+
+        vmWriter.writeLabel(labelFalse);
+
+        if (peekTokenIs(TokenType.ELSE)) {
+            expectPeek(TokenType.ELSE);
+            expectPeek(TokenType.LBRACE);
+            parseStatements();
+            expectPeek(TokenType.RBRACE);
+            vmWriter.writeLabel(labelEnd);
+        }
+
+        printNonTerminal("/ifStatement");
+    }
+
+
 
     
 
