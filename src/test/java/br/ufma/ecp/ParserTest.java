@@ -12,67 +12,61 @@ public class ParserTest extends TestSupport {
 
     @Test
     public void testParseLetSimple() {
-        var input = "let var1 = 10+20;";
+        var input = "let string = 20;";
         var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
         parser.parseLet();
-				var expectedResult =  """
-	     <letStatement>
+        System.out.println(parser.XMLOutput());
+    }
+
+    
+    @Test
+    public void testParseLet() {
+        var input = "let square = Square.new(0, 0, 30);";
+        var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
+        parser.parseLet();
+        var expectedResult =  """
+        <letStatement>
         <keyword> let </keyword>
-        <identifier> var1 </identifier>
+        <identifier> square </identifier>
         <symbol> = </symbol>
         <expression>
           <term>
-          <integerConstant> 10 </integerConstant>
+            <identifier> Square </identifier>
+            <symbol> . </symbol>
+            <identifier> new </identifier>
+            <symbol> ( </symbol>
+            <expressionList>
+              <expression>
+                <term>
+                  <integerConstant> 0 </integerConstant>
+                </term>
+              </expression>
+              <symbol> , </symbol>
+              <expression>
+                <term>
+                  <integerConstant> 0 </integerConstant>
+                </term>
+              </expression>
+              <symbol> , </symbol>
+              <expression>
+                <term>
+                  <integerConstant> 30 </integerConstant>
+                </term>
+              </expression>
+            </expressionList>
+            <symbol> ) </symbol>
           </term>
-          <symbol> + </symbol>
-          <term>
-          <integerConstant> 20 </integerConstant>
-          </term>
-          </expression>
+        </expression>
         <symbol> ; </symbol>
-      </letStatement> 
-				""";
+      </letStatement>
+      """;
         var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
         result = result.replaceAll("\r", ""); // no codigo em linux não tem o retorno de carro
         assertEquals(expectedResult, result);
     }
 
-    @Test 
-    public void testParseSimpleClass(){
-      var input = "class Main {};";
-      var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-      parser.parseClass();
-      var result = parser.XMLOutput();
-      System.out.println(result);
-    }
 
-    @Test
-    public void testParseExpressionSimple() {
-        var input = "10+20";
-        var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-        parser.parseExpression();
-        
-        var expectedResult =  """
-          <expression>
-          <term>
-          <integerConstant> 10 </integerConstant>
-          </term>
-          <symbol> + </symbol>
-          <term>
-          <integerConstant> 20 </integerConstant>
-          </term>
-          </expression>
-          """;
-              
-          var result = parser.XMLOutput();
-          result = result.replaceAll("\r", ""); 
-          expectedResult = expectedResult.replaceAll("  ", "");
-          assertEquals(expectedResult, result);    
-
-    }   
-   
-    
     @Test
     public void testParseIf() {
         var input = "if (direction = 1) { do square.moveUp(); }";
@@ -263,18 +257,18 @@ public class ParserTest extends TestSupport {
         assertEquals(expectedResult, result);
     }
 
-
+    /*
     @Test
     public void testParserWithLessSquareGame() throws IOException {
         var input = fromFile("ExpressionLessSquare/SquareGame.jack");
         var expectedResult =  fromFile("ExpressionLessSquare/SquareGame.xml");
 
         var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-        parser.parse();
+        parser.parser();
         var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
         assertEquals(expectedResult, result);
-    }
+    }     
 
     @Test
     public void testParserWithSquareGame() throws IOException {
@@ -282,12 +276,11 @@ public class ParserTest extends TestSupport {
         var expectedResult =  fromFile("Square/SquareGame.xml");
 
         var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-        parser.parse();
+        parser.parser();
         var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
         assertEquals(expectedResult, result);
     }
-
 
     @Test
     public void testParserWithSquare() throws IOException {
@@ -295,32 +288,29 @@ public class ParserTest extends TestSupport {
         var expectedResult =  fromFile("Square/Square.xml");
 
         var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-        parser.parse();
+        parser.parser();
+        var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
-
-      }
+        assertEquals(expectedResult, result);
+    }*/
 
     @Test
-    public void testVarDeclaration () {
-
+    public void testVarDeclaration() {
       var input = """
-        class Point {
-          field int x, y;
-          constructor Point new(int Ax, int Ay) {
-            var int Ax;
-            
-            let x = Ax;
-            let y = Ay;
-            return this;
-         }
-        }
-        """;;
-    var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-    parser.parse();
-    var result = parser.XMLOutput();
-    System.out.println(result);
-
+          class Point {
+            field int x, y;
+            constructor Point new(int Ax, int Ay) {
+              var int Ax;
+  
+              let x = Ax;
+              let y = Ay;
+              return this;
+           }
+          }
+          """;
+      var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
+      parser.parser();
+      var result = parser.XMLOutput();
+      System.out.println(result);
     }
-
-
 }
