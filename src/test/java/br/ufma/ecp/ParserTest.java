@@ -257,7 +257,7 @@ public class ParserTest extends TestSupport {
         assertEquals(expectedResult, result);
     }
 
-    /*
+   
     @Test
     public void testParserWithLessSquareGame() throws IOException {
         var input = fromFile("ExpressionLessSquare/SquareGame.jack");
@@ -292,7 +292,7 @@ public class ParserTest extends TestSupport {
         var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
         assertEquals(expectedResult, result);
-    }*/
+    }
 
     @Test
     public void testVarDeclaration() {

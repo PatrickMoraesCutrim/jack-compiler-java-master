@@ -37,7 +37,7 @@ public class Parser {
     }
 
     public void parser () {
-        
+        parseClass();
     }
 
     // 'class' className '{' classVarDec* subroutineDec* '}'
