@@ -264,7 +264,7 @@ public class ParserTest extends TestSupport {
         var expectedResult =  fromFile("ExpressionLessSquare/SquareGame.xml");
 
         var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-        parser.parse();
+        parser.parser();
         var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
         assertEquals(expectedResult, result);
@@ -276,7 +276,7 @@ public class ParserTest extends TestSupport {
         var expectedResult =  fromFile("Square/SquareGame.xml");
 
         var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-        parser.parse();
+        parser.parser();
         var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
         assertEquals(expectedResult, result);
@@ -288,11 +288,11 @@ public class ParserTest extends TestSupport {
         var expectedResult =  fromFile("Square/Square.xml");
 
         var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-        parser.parse();
+        parser.parser();
         var result = parser.XMLOutput();
         expectedResult = expectedResult.replaceAll("  ", "");
         assertEquals(expectedResult, result);
-    }
+    } 
 
     @Test
     public void testVarDeclaration() {
@@ -309,7 +309,7 @@ public class ParserTest extends TestSupport {
           }
           """;
       var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-      parser.parse();
+      parser.parser();
       var result = parser.XMLOutput();
       System.out.println(result);
     }

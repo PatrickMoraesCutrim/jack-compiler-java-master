@@ -1,5 +1,4 @@
 package br.ufma.ecp;
-
 import br.ufma.ecp.token.Token;
 import br.ufma.ecp.token.TokenType;
 
