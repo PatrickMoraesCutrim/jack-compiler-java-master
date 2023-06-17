@@ -247,21 +247,36 @@ public class Parser {
     // letStatement -> 'let' identifier( '[' expression ']' )? '=' expression ';'
     void parseLet() {
 
+         var isArray = false;
+
         printNonTerminal("letStatement");
         expectPeek(TokenType.LET);
         expectPeek(TokenType.IDENT);
+
+        var symbol = symTable.resolve(currentToken.lexeme);
+
         if (peekTokenIs(TokenType.LBRACKET)) {
             expectPeek(TokenType.LBRACKET);
             parseExpression();         
             expectPeek(TokenType.RBRACKET);
+
+            isArray = true;
         }
 
         expectPeek(TokenType.EQ);
         parseExpression();
+
+        if (isArray) {
+    
+
+        } else {
+            vmWriter.writePop(kind2Segment(symbol.kind()), symbol.index());
+        }
+
+
         expectPeek(TokenType.SEMICOLON);
         printNonTerminal("/letStatement");
     }
-
     // 'while' '(' expression ')' '{' statements '}'
     void parseWhile() {
         printNonTerminal("whileStatement");
@@ -291,7 +306,7 @@ public class Parser {
     }
 
     // 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
-    void parseIf() {
+    /*void parseIf() {
         printNonTerminal("ifStatement");
 
         var labelTrue = "IF_TRUE" + ifLabelNum;
@@ -331,7 +346,51 @@ public class Parser {
         printNonTerminal("/ifStatement");
     }
 
+*/
+    void parseIf() {
+            printNonTerminal("ifStatement");
 
+            var labelTrue = "IF_TRUE" + ifLabelNum;
+            var labelFalse = "IF_FALSE" + ifLabelNum;
+            var labelEnd = "IF_END" + ifLabelNum;
+
+            ifLabelNum++;
+        
+            expectPeek(TokenType.IF);
+            expectPeek(TokenType.LPAREN);
+            parseExpression();
+            expectPeek(TokenType.RPAREN);
+
+            vmWriter.writeIf(labelTrue);
+            vmWriter.writeGoto(labelFalse);
+            vmWriter.writeLabel(labelTrue);
+        
+            expectPeek(TokenType.LBRACE);
+            parseStatements();
+            expectPeek(TokenType.RBRACE);
+
+
+            if (peekTokenIs(TokenType.ELSE))
+            {
+                vmWriter.writeGoto(labelEnd);
+            }
+
+            vmWriter.writeLabel(labelFalse);
+
+            if (peekTokenIs(TokenType.ELSE))
+            {
+                expectPeek(TokenType.ELSE);
+
+                expectPeek(TokenType.LBRACE);
+
+                parseStatements();
+
+                expectPeek(TokenType.RBRACE);
+                vmWriter.writeLabel(labelEnd);
+            }
+
+            printNonTerminal("/ifStatement");
+        }
      // statement*
      void parseStatements() {
         printNonTerminal("statements");
