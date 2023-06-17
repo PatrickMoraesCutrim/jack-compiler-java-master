@@ -14,7 +14,7 @@ public class Parser {
     private Token currentToken;
     private Token peekToken;
     private StringBuilder xmlOutput = new StringBuilder();
- 
+    private VMWriter vmWriter = new VMWriter();
     
 
     private String className; // nome da classe
@@ -34,6 +34,7 @@ public class Parser {
         currentToken = peekToken;
         peekToken = scan.nextToken();        
     }
+    
 
     public void parser () {
         parseClass();
@@ -417,7 +418,7 @@ public class Parser {
     }
 
     public String VMOutput() {
-        return "";
+        return vmWriter.vmOutput();
     }
 
     private void printNonTerminal(String nterminal) {
@@ -443,6 +444,9 @@ public class Parser {
         throw new Error("Syntax error");
         // throw new Error( "Expected a statement"");
 
+        
     }
+
+    
 
 }
