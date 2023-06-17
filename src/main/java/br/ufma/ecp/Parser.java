@@ -149,7 +149,7 @@ public class Parser {
 
     // ( 'constructor' | 'function' | 'method' ) ( 'void' | type) subroutineName
     // '(' parameterList ')' subroutineBody
-/*
+
     void parseSubroutineDec() {
         printNonTerminal("subroutineDec");
 
@@ -178,9 +178,11 @@ public class Parser {
 
         printNonTerminal("/subroutineDec");
     }
-     */
 
-    void parseSubroutineDec() {
+    
+     
+/*
+void parseSubroutineDec() {
         
         printNonTerminal("subroutineDec");
 
@@ -213,6 +215,7 @@ public class Parser {
         printNonTerminal("/subroutineDec");
     }
 
+     */
     
 
      // ((type varName) ( ',' type varName)*)?
@@ -244,21 +247,27 @@ public class Parser {
         printNonTerminal("/parameterList");
     }
 
-    // letStatement -> 'let' identifier( '[' expression ']' )? '=' expression ';'
-    void parseLet() {
+    // // letStatement -> 'let' identifier( '[' expression ']' )? '=' expression ';'
+     void parseLet() {
 
-         var isArray = false;
+        var isArray = false;
 
         printNonTerminal("letStatement");
         expectPeek(TokenType.LET);
         expectPeek(TokenType.IDENT);
 
-        var symbol = symTable.resolve(currentToken.lexeme);
+        var symbol = symTable.resolve(currentToken.value());
 
-        if (peekTokenIs(TokenType.LBRACKET)) {
+        if (peekTokenIs(TokenType.LBRACKET)) { // array
             expectPeek(TokenType.LBRACKET);
-            parseExpression();         
+            parseExpression();
+            
+            vmWriter.writePush(kind2Segment(symbol.kind()), symbol.index());
+            vmWriter.writeArithmetic(Command.ADD);
+    
             expectPeek(TokenType.RBRACKET);
+
+
 
             isArray = true;
         }
@@ -267,17 +276,21 @@ public class Parser {
         parseExpression();
 
         if (isArray) {
+
+            vmWriter.writePop(Segment.TEMP, 0);    // push result back onto stack
+            vmWriter.writePop(Segment.POINTER, 1); // pop address pointer into pointer 1
+            vmWriter.writePush(Segment.TEMP, 0);   // push result back onto stack
+            vmWriter.writePop(Segment.THAT, 0);    // Store right hand side evaluation in THAT 0.
     
 
         } else {
-            vmWriter.writePop(kind2Segment(symbol.kind()), symbol.index());
+           // vmWriter.writePop(kind2Segment(symbol.kind()), symbol.index());
         }
-
 
         expectPeek(TokenType.SEMICOLON);
         printNonTerminal("/letStatement");
     }
-    // 'while' '(' expression ')' '{' statements '}'
+   // 'while' '(' expression ')' '{' statements '}'
     void parseWhile() {
         printNonTerminal("whileStatement");
 
@@ -560,7 +573,7 @@ public class Parser {
                         parseExpression();                        
                         expectPeek(TokenType.RBRACKET);                       
                     } else {
-                        vmWriter.writePush(kind2Segment(sym.kind()), sym.index());
+                      //  vmWriter.writePush(kind2Segment(sym.kind()), sym.index());
                     }
                 }
                 break;

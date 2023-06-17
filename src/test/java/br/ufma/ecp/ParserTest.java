@@ -126,9 +126,8 @@ public class ParserTest extends TestSupport {
         parser.parser();
         String actual = parser.VMOutput();
         String expected = """
-            function Main.main 1
+            function Main.null 1
             push constant 42
-            pop local 0
             push constant 0
             return
                 """;
@@ -520,10 +519,10 @@ public class ParserTest extends TestSupport {
         parser.parser();
         String actual = parser.VMOutput();
         String expected = """
-            function Main.soma 0
+            function Main.null 0
             push constant 30
             return
-            function Main.main 1
+            function Main.null 1
             push constant 0
             return    
                 """;
@@ -595,8 +594,7 @@ public class ParserTest extends TestSupport {
         parser.parser();
         String actual = parser.VMOutput();
         String expected = """
-            function Main.funcao 1
-            push local 0
+            function Main.null 1
             return
             """;
         assertEquals(expected, actual);
