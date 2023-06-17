@@ -308,7 +308,22 @@ public class ParserTest extends TestSupport {
                     """;
             assertEquals(expected, actual);
     }
-
+    @Test
+    public void testSimpleExpression () {
+        var input = """
+            10 + 30
+            """;
+        
+        var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
+        parser.parseExpression();
+        String actual = parser.VMOutput();
+        String expected = """
+                push constant 10
+                push constant 30
+                add       
+                    """;
+            assertEquals(expected, actual);
+    }
     @Test
     public void testVarDeclaration() {
       var input = """
@@ -323,6 +338,7 @@ public class ParserTest extends TestSupport {
            }
           }
           """;
+          
       var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
       parser.parser();
       var result = parser.XMLOutput();

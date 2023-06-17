@@ -1,4 +1,5 @@
 package br.ufma.ecp;
+import br.ufma.ecp.VMWriter.Command;
 import br.ufma.ecp.VMWriter.Segment;
 import br.ufma.ecp.token.Token;
 import br.ufma.ecp.token.TokenType;
@@ -302,7 +303,7 @@ public class Parser {
     }
 
     // expression -> term (op term)*
-    void parseExpression() {
+   void parseExpression() {
         printNonTerminal("expression");
         parseTerm();
         while (isOperator(peekToken.type)) {
@@ -312,6 +313,35 @@ public class Parser {
             compileOperators(ope);
         }
         printNonTerminal("/expression");
+    }
+
+    public void compileOperators(TokenType type) {
+
+        if (type == TokenType.ASTERISK) {
+            vmWriter.writeCall("Math.multiply", 2);
+        } else if (type == TokenType.SLASH) {
+            vmWriter.writeCall("Math.divide", 2);
+        } else {
+            vmWriter.writeArithmetic(typeOperator(type));
+        }
+    }
+
+    private Command typeOperator(TokenType type) {
+        if (type == TokenType.PLUS)
+            return Command.ADD;
+        if (type == TokenType.MINUS)
+            return Command.SUB;
+        if (type == TokenType.LT)
+            return Command.LT;
+        if (type == TokenType.GT)
+            return Command.GT;
+        if (type == TokenType.EQ)
+            return Command.EQ;
+        if (type == TokenType.AND)
+            return Command.AND;
+        if (type == TokenType.OR)
+            return Command.OR;
+        return null;
     }
     
      // term -> number | identifier | stringConstant | keywordConstant
@@ -403,16 +433,7 @@ public class Parser {
         } 
     }
 
-    public void compileOperators(TokenType type) {
-
-        if (type == TokenType.ASTERISK) {
-            ;
-        } else if (type == TokenType.SLASH) {
-            ;
-        } else {
-            ;
-        }
-    }
+   
     
 
     //Funções Auxiliares
