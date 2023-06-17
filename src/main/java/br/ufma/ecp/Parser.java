@@ -148,6 +148,37 @@ public class Parser {
 
     // ( 'constructor' | 'function' | 'method' ) ( 'void' | type) subroutineName
     // '(' parameterList ')' subroutineBody
+/*
+    void parseSubroutineDec() {
+        printNonTerminal("subroutineDec");
+
+        ifLabelNum = 0;
+        whileLabelNum = 0;
+
+        symTable.startSubroutine();
+
+        expectPeek(TokenType.CONSTRUCTOR, TokenType.FUNCTION, TokenType.METHOD);
+        var subroutineType = currentToken.type;
+
+        if (subroutineType == TokenType.METHOD) {
+            symTable.define("this", className, Kind.ARG);
+        }
+
+        // 'int' | 'char' | 'boolean' | className
+        expectPeek(TokenType.VOID, TokenType.INT, TokenType.CHAR, TokenType.BOOLEAN, TokenType.IDENT);
+        expectPeek(TokenType.IDENT);
+
+        var functionName = className + "." + currentToken.value();
+
+        expectPeek(TokenType.LPAREN);
+        parseParameterList();
+        expectPeek(TokenType.RPAREN);
+        parseSubroutineBody(functionName, subroutineType);
+
+        printNonTerminal("/subroutineDec");
+    }
+     */
+
     void parseSubroutineDec() {
         
         printNonTerminal("subroutineDec");
@@ -180,6 +211,8 @@ public class Parser {
 
         printNonTerminal("/subroutineDec");
     }
+
+    
 
      // ((type varName) ( ',' type varName)*)?
      void parseParameterList() {
@@ -508,6 +541,11 @@ public class Parser {
         while (peekTokenIs(TokenType.VAR)) {
             parseVarDec();
         }    
+        var nlocals = symTable.varCount(Kind.VAR);
+
+        vmWriter.writeFunction(functName, nlocals);
+
+
         parseStatements();
         expectPeek(TokenType.RBRACE);
         printNonTerminal("/subroutineBody");

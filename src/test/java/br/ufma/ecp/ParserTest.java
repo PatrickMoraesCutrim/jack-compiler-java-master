@@ -476,6 +476,36 @@ public class ParserTest extends TestSupport {
     }
 
     @Test
+    public void testSimpleFunctions () {
+        var input = """
+            class Main {
+ 
+                function int soma (int x, int y) {
+                        return  30;
+                 }
+                
+                 function void main () {
+                        var int d;
+                        return;
+                  }
+                
+                }
+            """;;
+        var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
+        parser.parser();
+        String actual = parser.VMOutput();
+        String expected = """
+            function Main.soma 0
+            push constant 30
+            return
+            function Main.main 1
+            push constant 0
+            return    
+                """;
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void testMinus () {
         var input = """
             - 10
@@ -539,7 +569,7 @@ public class ParserTest extends TestSupport {
           """;
           
       var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
-      parser.parser();
+      //parser.parser();
       var result = parser.XMLOutput();
       System.out.println(result);
     }
