@@ -383,10 +383,14 @@ public class Parser {
             case FALSE:
             case NULL:
             case TRUE:
-                expectPeek(TokenType.FALSE, TokenType.NULL, TokenType.TRUE);                
+                expectPeek(TokenType.FALSE, TokenType.NULL, TokenType.TRUE);   
+                vmWriter.writePush(Segment.CONST, 0);
+                if (currentToken.type == TokenType.TRUE)
+                    vmWriter.writeArithmetic(Command.NOT);            
                 break;
             case THIS:
-                expectPeek(TokenType.THIS);                
+                expectPeek(TokenType.THIS); 
+                vmWriter.writePush(Segment.POINTER, 0);               
                 break;
 
             case LPAREN:
