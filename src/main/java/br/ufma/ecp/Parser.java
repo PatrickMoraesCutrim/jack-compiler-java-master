@@ -1,5 +1,6 @@
 package br.ufma.ecp;
 import br.ufma.ecp.SymbolTable.Kind;
+import br.ufma.ecp.SymbolTable.Symbol;
 import br.ufma.ecp.VMWriter.Command;
 import br.ufma.ecp.VMWriter.Segment;
 import br.ufma.ecp.token.Token;
@@ -450,6 +451,18 @@ public class Parser {
             return Command.OR;
         return null;
     }
+
+    private Segment kind2Segment(Kind kind) {
+        if (kind == Kind.STATIC)
+            return Segment.STATIC;
+        if (kind == Kind.FIELD)
+            return Segment.THIS;
+        if (kind == Kind.VAR)
+            return Segment.LOCAL;
+        if (kind == Kind.ARG)
+            return Segment.ARG;
+        return null;
+    }
     
      // term -> number | identifier | stringConstant | keywordConstant
     void parseTerm() {
@@ -475,7 +488,10 @@ public class Parser {
             
 
             case IDENT:
+                
                 expectPeek(TokenType.IDENT);
+
+                Symbol sym = symTable.resolve(currentToken.lexeme);
                 
                 if (peekTokenIs(TokenType.LPAREN) || peekTokenIs(TokenType.DOT)) {
                     parseSubroutineCall();
@@ -484,7 +500,9 @@ public class Parser {
                         expectPeek(TokenType.LBRACKET);
                         parseExpression();                        
                         expectPeek(TokenType.RBRACKET);                       
-                    } 
+                    } else {
+                        vmWriter.writePush(kind2Segment(sym.kind()), sym.index());
+                    }
                 }
                 break;
             case FALSE:
