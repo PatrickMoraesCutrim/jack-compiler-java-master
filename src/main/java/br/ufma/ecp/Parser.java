@@ -673,6 +673,18 @@ void parseSubroutineDec() {
 
         vmWriter.writeFunction(functName, nlocals);
 
+         if (subroutineType == TokenType.CONSTRUCTOR) {
+            vmWriter.writePush(Segment.CONST, symTable.varCount(Kind.FIELD));
+            vmWriter.writeCall("Memory.alloc", 1);
+            vmWriter.writePop(Segment.POINTER, 0);
+        }
+
+        if (subroutineType == TokenType.METHOD) {
+            vmWriter.writePush(Segment.ARG, 0);
+            vmWriter.writePop(Segment.POINTER, 0);
+        }
+
+
 
         parseStatements();
         expectPeek(TokenType.RBRACE);
