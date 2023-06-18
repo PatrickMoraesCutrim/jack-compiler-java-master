@@ -321,7 +321,7 @@ void parseSubroutineDec() {
     
 
         } else {
-           // vmWriter.writePop(kind2Segment(symbol.kind()), symbol.index());
+            //vmWriter.writePop(kind2Segment(symbol.kind()), symbol.index());
         }
 
         expectPeek(TokenType.SEMICOLON);
@@ -656,6 +656,7 @@ void parseSubroutineDec() {
         expectPeek(TokenType.IDENT);
         parseSubroutineCall();
         expectPeek(TokenType.SEMICOLON);
+        vmWriter.writePop(Segment.TEMP, 0);
         
         printNonTerminal("/doStatement");
     }

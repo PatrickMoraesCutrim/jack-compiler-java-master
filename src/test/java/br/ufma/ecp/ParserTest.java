@@ -183,7 +183,31 @@ public class ParserTest extends TestSupport {
  
  
     }
-    
+    @Test
+    public void doStatement () {
+        var input = """
+            class Main {
+                function void main () {
+                    var int x;
+                    let x = 10;
+                    do Output.printInt(x);
+                    return;
+                }
+            }
+            """;;
+        var parser = new Parser(input.getBytes(StandardCharsets.UTF_8));
+        parser.parser();
+        String actual = parser.VMOutput();
+        String expected = """
+            function Main.null 1
+            push constant 10
+            call Output.printInt 1
+            pop temp 0
+            push constant 0
+            return
+                """;
+        assertEquals(expected, actual);
+    }
     @Test
     public void methodTest () {
         var input = """
